@@ -110,8 +110,6 @@ This script:
 * averages replicates
 * generates plots comparable to those shown in the manuscript
 
-```
-
 Each folder contains:
 
 * input data (or example data)
