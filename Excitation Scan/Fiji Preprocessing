@@ -1,0 +1,88 @@
+// Small script to help analyse Lambda (excitation) scans from the Leica SP8. 
+// The script expects a folder with exported .tiff files (one file per channel [e.g. intensity, lifetime, g]) as input.
+// The script iterates over the channel indicated below (please set ch to the channel you want). 
+// Output will be a tiff-stack for the respective channel ch in a subfolder called Stacks. 
+//
+// Version 01
+// FS @faldalf 14/07/2024
+// Update (16/07/24): create a stack for all selected channels.
+// 
+// 	To do: 
+//  - Needs to be tested for large lambda stacks (more than 9 wavelengths)!!!
+
+// specify channel to analyse
+Dialog.create("What channels would you like to save to stack?");
+Dialog.addCheckbox("Ch0 (NADH_Intensity)", true);
+Dialog.addCheckbox("Ch1 (NADH_Lifetime)", true);
+Dialog.addCheckbox("Ch2 (NADH_G)", false);
+Dialog.addCheckbox("Ch3 (NADH_S)", false);
+Dialog.addCheckbox("Ch4 (FP_Intensity)", false);
+Dialog.addCheckbox("Ch5 (FP_Lifetime)", false);
+Dialog.addCheckbox("Ch6 (FP_G)", false);
+Dialog.addCheckbox("Ch7 (FP_S)", false);
+Dialog.show();
+
+ch0 = Dialog.getCheckbox();
+ch1 = Dialog.getCheckbox();
+ch2 = Dialog.getCheckbox();
+ch3 = Dialog.getCheckbox();
+ch4 = Dialog.getCheckbox();
+ch5 = Dialog.getCheckbox();
+ch6 = Dialog.getCheckbox();
+ch7 = Dialog.getCheckbox();
+
+// Prepare boolean and str list for the channels to be analysed. 
+chan_array = newArray(ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7);
+chan_list = newArray ("ch0","ch1","ch2","ch3","ch4","ch5","ch6","ch7");
+
+// The rest of the script should run automatically. 
+folder = getDirectory("Folder"); //Choose folder where all the images are
+list = getFileList(folder); // This lists all the files in the folder
+
+// For every channel that is ticked, we create the stack. 
+for (k=0; k<chan_array.length; k++){
+	if (chan_array [k]){
+		print ("Processing:");
+		print (chan_list[k]);
+		ch = chan_list[k];
+
+
+		lambda = 0; // this is our counter for wavelength channel
+		
+		for (g=0; g<list.length; g++) { //This goes through each file iteratively. "g" will be the file counter
+			I1 = folder + list[g]; //it allows us to assaign the opened image to the variable I1
+		    //Now we check if the filename contains the right channel indicator ch and the right wavelength indicator g
+			if(matches(I1, ".*" + ch + ".*")) {
+				if (lambda<10){
+						lambda_str="0"+lambda;
+					}
+					if (lambda>=10) {
+						lambda_str=lambda;
+					}
+				if(matches(I1, ".*LA" + lambda_str + ".*")) {
+					
+					
+					
+					open(I1); // open the image that matches
+					lambda = lambda + 1; // increase wavelength channel by 1
+				}
+			  }
+			}
+		
+		// Now let's save all the open images to a stack. 
+		run("Images to Stack", "use");
+		// Create a folder for the tiff-stack
+		folder2 = folder + File.separator + "Stacks";
+		File.makeDirectory(folder2);
+		// Save the stack
+		saveAs("Tiff", folder2 + File.separator + "Stack_" + ch + ".tif");
+		close();
+
+	}
+	
+}
+
+
+
+print ("All done!")
+
