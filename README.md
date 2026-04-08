@@ -50,30 +50,34 @@ fiji_macros/
     ImageJ/FIJI macros for ROI selection and batch processing
 
 results_reproduction/
-    Organized scripts and workflows for reproducing specific figures
+    Organized scripts and workflows for reproducing analyses
 
 docs/
-    Additional documentation and workflow explanations (if applicable)
+    Additional documentation and workflow explanations (optional)
 ```
 
 ---
 
 ## ⚙️ Requirements
 
-Python 3.x
+Python 3.9+ (tested)
 
-Install dependencies using:
+Install all dependencies:
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
-Typical dependencies include:
+This will install:
 
 * numpy
 * pandas
 * matplotlib
 * scipy
+* seaborn
+* pillow
+* tifffile
+* openpyxl
 
 ---
 
@@ -81,13 +85,13 @@ Typical dependencies include:
 
 ### 1. Extract ROIs from images
 
-Use FIJI/ImageJ and run:
+Open FIJI/ImageJ and run:
 
 ```
 fiji_macros/ROI_extraction.ijm
 ```
 
-This will generate CSV files containing:
+This step generates CSV files containing:
 
 * fluorescence intensity
 * lifetime values
@@ -99,7 +103,7 @@ This will generate CSV files containing:
 
 Example: excitation scan analysis
 
-```
+```bash
 python scripts/excitation_scan_analysis.py
 ```
 
@@ -109,6 +113,12 @@ This script:
 * normalizes intensity values
 * averages replicates
 * generates plots comparable to those shown in the manuscript
+
+---
+
+## 📂 Reproducing Analyses
+
+Folders in `results_reproduction/` are organized by analysis type.
 
 Each folder contains:
 
@@ -121,7 +131,7 @@ Each folder contains:
 ## 📊 Notes on Data
 
 * `data_example/` contains representative datasets for demonstration
-* Full raw datasets are not included due to size but are available upon reasonable request
+* Full raw datasets are not included due to size, but are available upon reasonable request
 * Data processing steps follow those described in the Methods section of the manuscript
 
 ---
@@ -138,7 +148,7 @@ Each folder contains:
 
 If you use this code or workflow, please cite:
 
-Cuala, J. & Alberto, O. et al. (2025)
+Cuala, J. & Alberto, O. et al. (2026)
 *Mapping Cross-Excitation: Multiplexing NADH and Fluorescent Proteins in Metabolic Imaging*
 
 ---
