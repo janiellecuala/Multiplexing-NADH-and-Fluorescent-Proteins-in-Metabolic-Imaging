@@ -1,1 +1,8 @@
-
+numpy
+pandas
+matplotlib
+scipy
+seaborn
+pillow
+tifffile
+openpyxl
