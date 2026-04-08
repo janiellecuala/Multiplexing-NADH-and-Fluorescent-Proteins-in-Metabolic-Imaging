@@ -1,3 +1,5 @@
+# Python 3.9+ recommended
+
 numpy
 pandas
 matplotlib
@@ -6,3 +8,4 @@ seaborn
 pillow
 tifffile
 openpyxl
+scikit-learn
