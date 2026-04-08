@@ -1,6 +1,6 @@
 # Multiplexing NADH and Fluorescent Proteins in Metabolic Imaging
 
-This repository contains analysis code, example datasets, and processing workflows accompanying:
+This repository contains analysis code and processing workflows accompanying:
 
 **Cuala & Alberto et al. – *Mapping Cross-Excitation: Multiplexing NADH and Fluorescent Proteins in Metabolic Imaging***
 
@@ -8,52 +8,50 @@ This repository contains analysis code, example datasets, and processing workflo
 
 ## 🧠 Overview
 
-Fluorescence lifetime imaging microscopy (FLIM) of NAD(P)H enables label-free assessment of cellular metabolism. This project investigates how fluorescent proteins (FPs) interfere with NADH lifetime measurements under two-photon excitation and provides a computational pipeline for analyzing these effects.
+Fluorescence lifetime imaging microscopy (FLIM) of NAD(P)H enables label-free assessment of cellular metabolic state. This repository provides the computational workflows used to evaluate fluorescent protein (FP) cross-excitation and its impact on NADH lifetime measurements under two-photon excitation.
 
-Specifically, this repository supports:
+The repository is organized into three analysis modules:
 
-* Quantification of excitation and emission spectra
-* Analysis of fluorescence lifetime (FLIM) data using phasor-based approaches
-* Extraction of ROI-based measurements from microscopy images
-* Reproduction of key plots (e.g., excitation scans, intensity comparisons)
+* **Excitation scan analysis**
+* **Emission scan preprocessing**
+* **Metabolic trajectory (phasor) analysis**
+
+Together, these workflows support quantitative characterization of spectral cross-talk and its effects on metabolic FLIM measurements.
 
 ---
 
 ## 🔬 Analysis Workflow
 
-The general analysis pipeline used in this study is:
-
-```
-Raw microscopy images
+```text
+Raw microscopy data
     ↓
-FIJI/ImageJ ROI selection (macros provided)
+FIJI/ImageJ preprocessing and ROI selection
     ↓
-Exported CSV data (intensity, lifetime, G/S coordinates)
+Export of ROI-level measurements (CSV)
     ↓
-Python-based processing and plotting
+Python-based analysis and visualization
     ↓
-Final figures (e.g., excitation scans, comparisons across FPs)
+Final outputs:
+    • Excitation scan plots
+    • Emission scan preprocessing outputs
+    • Phasor-based metabolic trajectory plots
 ```
 
 ---
 
 ## 📁 Repository Structure
 
-```
-data_example/
-    Example datasets for testing the pipeline
+```text
+excitation_scan/
+    Fiji_ROI_csv_creation.ijm
+    py_preprocessing_stackCSV.py
+    py_emscan_plot.py
 
-scripts/
-    Python scripts for data processing, normalization, and plotting
+emission_scan/
+    Fiji_Preprocessing.ijm
 
-fiji_macros/
-    ImageJ/FIJI macros for ROI selection and batch processing
-
-results_reproduction/
-    Organized scripts and workflows for reproducing analyses
-
-docs/
-    Additional documentation and workflow explanations (optional)
+metabolic_trajectory/
+    figure6_phasor_metabolic_trajectory.py
 ```
 
 ---
@@ -62,13 +60,13 @@ docs/
 
 Python 3.9+ (tested)
 
-Install all dependencies:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-This will install:
+Core dependencies:
 
 * numpy
 * pandas
@@ -78,69 +76,82 @@ This will install:
 * pillow
 * tifffile
 * openpyxl
+* scikit-learn
 
 ---
 
-## ▶️ Getting Started
+## 📥 Input Data
 
-### 1. Extract ROIs from images
+Each analysis module expects a specific input format:
 
-Open FIJI/ImageJ and run:
+### Excitation Scan
 
-```
-fiji_macros/ROI_extraction.ijm
-```
-
-This step generates CSV files containing:
-
-* fluorescence intensity
-* lifetime values
-* phasor coordinates (G and S)
+* **Input:** CSV files generated from ROI-based measurements
+* **Source:** FIJI/ImageJ (`Fiji_ROI_csv_creation.ijm`)
+* **Content:** intensity values across excitation wavelengths
 
 ---
 
-### 2. Run analysis scripts
+### Emission Scan
 
-Example: excitation scan analysis
+* **Input:** microscopy image data (e.g., TIFF stacks)
+* **Processing:** performed in FIJI/ImageJ (`Fiji_Preprocessing.ijm`)
+* **Note:** this repository includes preprocessing macros; downstream analysis depends on acquisition-specific workflows
+
+---
+
+### Metabolic Trajectory (Phasor Analysis)
+
+* **Input:** CSV files containing phasor coordinates
+
+**Required columns:**
+
+* `G_coordinate`
+* `S_coordinate`
+
+* Each row corresponds to a single ROI
+* Separate files represent distinct experimental conditions
+* File paths should be specified within analysis scripts (e.g., `DATA_PATHS`)
+
+---
+
+## ▶️ Usage
+
+### Excitation Scan Analysis
 
 ```bash
-python scripts/excitation_scan_analysis.py
+python excitation_scan/py_preprocessing_stackCSV.py
+python excitation_scan/py_exscan_plot.py
 ```
 
-This script:
+---
 
-* reads CSV data
-* normalizes intensity values
-* averages replicates
-* generates plots comparable to those shown in the manuscript
+### Emission Scan Preprocessing
+
+Run in FIJI/ImageJ:
+
+```
+emission_scan/Fiji_Preprocessing.ijm
+python excitation_scan/py_emscan_plot.py
+```
 
 ---
 
-## 📂 Reproducing Analyses
+### Metabolic Trajectory Analysis
 
-Folders in `results_reproduction/` are organized by analysis type.
+```bash
+python metabolic_trajectory/figure6_phasor_metabolic_trajectory.py
+```
 
-Each folder contains:
-
-* input data (or example data)
-* analysis scripts
-* expected outputs
+This workflow generates phasor-based representations of metabolic state across experimental conditions.
 
 ---
 
-## 📊 Notes on Data
+## ⚠️ Notes
 
-* `data_example/` contains representative datasets for demonstration
-* Full raw datasets are not included due to size, but are available upon reasonable request
-* Data processing steps follow those described in the Methods section of the manuscript
-
----
-
-## ⚠️ Important Considerations
-
-* Fluorescent protein cross-talk can introduce signal into the NADH channel under two-photon excitation
-* Careful interpretation of lifetime and intensity data is required, especially when multiplexing
-* This pipeline assumes preprocessing (e.g., phasor extraction) has been performed in Leica LAS X or equivalent software
+* Fluorescent protein cross-excitation can introduce signal into the NADH detection channel under two-photon excitation
+* Interpretation of lifetime and intensity measurements should account for potential spectral overlap
+* Upstream preprocessing (e.g., phasor extraction) is assumed to be performed in Leica LAS X or equivalent software
 
 ---
 
@@ -155,4 +166,4 @@ Cuala, J. & Alberto, O. et al. (2026)
 
 ## 🤝 Contact
 
-For questions, data requests, or collaboration inquiries, please contact the corresponding author listed in the manuscript.
+For questions or data requests, please contact the corresponding author listed in the manuscript.
