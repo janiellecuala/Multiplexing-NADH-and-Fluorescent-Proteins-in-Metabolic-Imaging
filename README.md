@@ -10,19 +10,18 @@ This repository contains analysis code and processing workflows accompanying:
 
 Fluorescence lifetime imaging microscopy (FLIM) of NAD(P)H enables label-free assessment of cellular metabolic state. This repository provides the computational workflows used to evaluate fluorescent protein (FP) cross-excitation and its impact on NADH lifetime measurements under two-photon excitation.
 
-The repository is organized into three analysis modules:
+The repository is organized into two analysis modules:
 
-* **Excitation scan analysis**
-* **Emission scan preprocessing**
+* **Excitation and emission scan analysis**
 * **Metabolic trajectory (phasor) analysis**
 
-Together, these workflows support quantitative characterization of spectral cross-talk and its effects on metabolic FLIM measurements.
+These workflows support quantitative characterization of spectral cross-talk and its influence on metabolic FLIM measurements.
 
 ---
 
 ## 🔬 Analysis Workflow
 
-```text
+```text id="pipeline_consolidated"
 Raw microscopy data
     ↓
 FIJI/ImageJ preprocessing and ROI selection
@@ -41,14 +40,13 @@ Final outputs:
 
 ## 📁 Repository Structure
 
-```text
-excitation_scan/
+```text id="structure_consolidated"
+excitation_emission_scans/
     Fiji_ROI_csv_creation.ijm
+    Fiji_Preprocessing.ijm
     py_preprocessing_stackCSV.py
     py_emscan_plot.py
-
-emission_scan/
-    Fiji_Preprocessing.ijm
+    exScan_fluor.py
 
 metabolic_trajectory/
     figure6_phasor_metabolic_trajectory.py
@@ -62,7 +60,7 @@ Python 3.9+ (tested)
 
 Install dependencies:
 
-```bash
+```bash id="install_consolidated"
 pip install -r requirements.txt
 ```
 
@@ -84,19 +82,25 @@ Core dependencies:
 
 Each analysis module expects a specific input format:
 
-### Excitation Scan
+### Excitation / Emission Scans
 
-* **Input:** CSV files generated from ROI-based measurements
-* **Source:** FIJI/ImageJ (`Fiji_ROI_csv_creation.ijm`)
-* **Content:** intensity values across excitation wavelengths
+* **Input (excitation):** CSV files containing ROI intensity values across excitation wavelengths
 
----
+* **Input (emission):** microscopy image data (e.g., TIFF stacks)
 
-### Emission Scan
+* **Generated / processed using:**
 
-* **Input:** microscopy image data (e.g., TIFF stacks)
-* **Processing:** performed in FIJI/ImageJ (`Fiji_Preprocessing.ijm`)
-* **Note:** this repository includes preprocessing macros; downstream analysis depends on acquisition-specific workflows
+  ```
+  excitation_emission_scans/Fiji_ROI_csv_creation.ijm
+  excitation_emission_scans/Fiji_Preprocessing.ijm
+  ```
+
+* CSV data should include:
+
+  * intensity measurements per ROI
+  * multiple columns corresponding to compartments (e.g., transfected nuclei, untransfected nuclei, cytoplasm)
+
+* Multiple CSV files represent biological replicates
 
 ---
 
@@ -109,9 +113,23 @@ Each analysis module expects a specific input format:
 * `G_coordinate`
 * `S_coordinate`
 
+**Optional columns:**
+
+* `Intensity`
+* `Lifetime`
+
+**Example:**
+
+```csv id="csv_consolidated"
+ROI,Intensity,Lifetime,G_coordinate,S_coordinate
+Cell_1,1523,1.85,0.42,0.31
+Cell_2,1398,2.10,0.38,0.28
+Cell_3,1672,1.65,0.47,0.34
+```
+
 * Each row corresponds to a single ROI
 * Separate files represent distinct experimental conditions
-* File paths should be specified within analysis scripts (e.g., `DATA_PATHS`)
+* File paths are defined within scripts (e.g., `DATA_PATHS`)
 
 ---
 
@@ -119,10 +137,23 @@ Each analysis module expects a specific input format:
 
 ### Excitation Scan Analysis
 
-```bash
-python excitation_scan/py_preprocessing_stackCSV.py
-python excitation_scan/py_exscan_plot.py
+```bash id="excitation_consolidated"
+python excitation_emission_scans/py_preprocessing_stackCSV.py
+python excitation_emission_scans/py_emscan_plot.py
 ```
+
+Optional interactive visualization:
+
+```bash id="interactive_consolidated"
+python excitation_emission_scans/exScan_fluor.py
+```
+
+This tool:
+
+* normalizes intensity by laser power
+* combines biological replicates
+* propagates SEM
+* applies log transformation and plotting 
 
 ---
 
@@ -130,27 +161,26 @@ python excitation_scan/py_exscan_plot.py
 
 Run in FIJI/ImageJ:
 
-```
-emission_scan/Fiji_Preprocessing.ijm
-python excitation_scan/py_emscan_plot.py
+```id="emission_consolidated"
+excitation_emission_scans/Fiji_Preprocessing.ijm
 ```
 
 ---
 
 ### Metabolic Trajectory Analysis
 
-```bash
+```bash id="trajectory_consolidated"
 python metabolic_trajectory/figure6_phasor_metabolic_trajectory.py
 ```
 
-This workflow generates phasor-based representations of metabolic state across experimental conditions.
+Generates phasor-based representations of metabolic state across conditions.
 
 ---
 
 ## ⚠️ Notes
 
 * Fluorescent protein cross-excitation can introduce signal into the NADH detection channel under two-photon excitation
-* Interpretation of lifetime and intensity measurements should account for potential spectral overlap
+* Interpretation of lifetime and intensity measurements should account for spectral overlap
 * Upstream preprocessing (e.g., phasor extraction) is assumed to be performed in Leica LAS X or equivalent software
 
 ---
