@@ -17,8 +17,7 @@ The repository is organized into two analysis modules:
 
 And contains the following example data: 
 
-* **Really beautiful data. 
-
+DATAAAA
 These workflows enable quantitative characterization of spectral cross-talk and its influence on metabolic FLIM measurements.
 
 ---
