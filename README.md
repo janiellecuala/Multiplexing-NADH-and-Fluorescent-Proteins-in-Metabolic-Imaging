@@ -16,8 +16,9 @@ The repository is organized into two analysis modules:
 * **Metabolic trajectory (phasor) analysis**
 
 And contains the following example data: 
+* **Beautiful data**
+* **Even more beautiful data**
 
-DATAAAA
 These workflows enable quantitative characterization of spectral cross-talk and its influence on metabolic FLIM measurements.
 
 ---
