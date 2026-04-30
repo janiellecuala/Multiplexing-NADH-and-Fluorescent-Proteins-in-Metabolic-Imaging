@@ -21,36 +21,28 @@ These workflows enable quantitative characterization of spectral cross-talk and 
 
 ## 🔬 Analysis Workflow
 
-### Excitation Scan Pipeline
+### Excitation and Emission Scan Pipeline
+
+The same pipeline handles both scan types — select excitation or emission when prompted in `scan_fluor.py`.
 
 ```
 Raw SP8 data (per-wavelength, per-channel .tif files)
     ↓
 1. Assemble_ExScan_ch0_Stack.ijm
-   — selects intensity channel (ch0), assembles into single wavelength stack
+   — selects intensity channel (ch0)
+   — assembles all wavelength steps into one stack
+   — LA00 = 680nm, each step = +10nm, variable number of steps
     ↓
 2. FijiROI_csvcreation.ijm
    — manual ROI drawing (transfected nuclei, untransfected nuclei, cytoplasm)
-   — extracts mean intensity per ROI per wavelength (680–XXX nm)
-   — outputs one CSV per biological replicate
+   — extracts mean intensity per ROI per wavelength
+   — outputs one clean CSV per biological replicate
     ↓
-3. exScan_fluor.py
-   — laser power normalization (SP8-specific)
-   — combines biological replicates, propagates SEM
+3. scan_fluor.py  (select excitation or emission when prompted)
+   — SP8 laser power normalization (see Calibration note below)
+   — combines biological replicates with SEM propagation
    — log₁₀ transformation via delta method
-   — generates excitation scan plots
-```
-
-### Emission Scan Pipeline
-
-```
-Raw SP8 TIFF stacks
-    ↓
-emscanplot.py
-   — assembles intensity profiles across emission wavelengths
-   — laser power normalization
-   — combines replicates, calculates mean ± SEM
-   — generates emission scan plots
+   — generates plots with ±SEM shaded error bands
 ```
 
 ### Metabolic Trajectory Pipeline
@@ -72,25 +64,27 @@ repo/
 │   ├── Assemble_ExScan_ch0_Stack.ijm       # Step 1: assemble ch0 intensity stack from raw files
 │   └── FijiROI_csvcreation.ijm             # Step 2: draw ROIs, extract intensities, export CSV
 │
-├── ExcitationScan/
-│   └── exScan_fluor.py                     # Step 3: normalize, combine replicates, plot
-│
-├── EmissionScan/
-│   └── emscanplot.py                       # Emission scan processing and plotting
+├── scan_fluor/
+│   └── scan_fluor.py                       # Step 3: normalize, combine replicates, plot
+│                                           # handles both excitation and emission scans
 │
 ├── metabolic_trajectory/
 │   └── figure6_phasor_metabolic_trajectory.py
 │
 ├── data_example/
-│   ├── avGFP1_Results.csv                  # Example biological replicate 1
-│   ├── avGFP2_Results.csv                  # Example biological replicate 2
-│   └── SP8_Laser_power_measurements.csv    # SP8 laser power calibration data
+│   ├── raw/
+│   │   ├── av-post2_LA00_ch0.tif           # Example raw SP8 files (av-post2, LA00–LA44)
+│   │   ├── av-post2_LA00_ch1.tif           # ch0 = intensity, ch1–ch7 = other channels
+│   │   └── ...                             # 680nm (LA00) to 1120nm (LA44), 8 channels each
+│   ├── avGFP1_Results.csv                  # Example processed CSV — biological replicate 1
+│   ├── avGFP2_Results.csv                  # Example processed CSV — biological replicate 2
+│   └── SP8_Laser_power_measurements.csv    # SP8 laser power calibration (10% power, 2024-08-07)
 │
 ├── requirements.txt
 └── README.md
 ```
 
-> **Note:** `preprocessing_stackCSV.py` is no longer part of the excitation scan pipeline. The updated `FijiROI_csvcreation.ijm` now outputs a clean CSV directly compatible with `exScan_fluor.py`.
+> **Note:** `preprocessing_stackCSV.py` and `emscanplot.py` are no longer part of the pipeline. `FijiROI_csvcreation.ijm` now outputs a clean CSV directly compatible with `scan_fluor.py`, which handles both excitation and emission scans.
 
 ---
 
@@ -119,7 +113,7 @@ Core dependencies:
 
 ## 📥 Input Data
 
-### Excitation Scan
+### Excitation and Emission Scans
 
 Raw input files follow the SP8 naming convention:
 
@@ -130,7 +124,9 @@ Raw input files follow the SP8 naming convention:
 ...
 ```
 
-All files for one sample should be in a single folder. `LA00` always corresponds to 680 nm; the number of wavelength steps can vary per experiment.
+All files for one sample should be in a single folder. `LA00` always corresponds to 680 nm; the number of wavelength steps varies per experiment (e.g. avGFP1/avGFP2 example data = 11 steps / 680–780 nm; av-post2 raw example = 45 steps / 680–1120 nm). The pipeline handles any number of steps automatically.
+
+The same folder structure and Fiji macros are used for both excitation and emission scans. Scan type is specified at the Python step.
 
 After Fiji preprocessing, each biological replicate produces one CSV with the following structure:
 
@@ -149,13 +145,7 @@ ROI naming convention used during manual segmentation:
 | Untransfected nuclei | `untrans_nuc1`, `untrans_nuc2`, ... |
 | Cytoplasm | `cyto1`, `cyto2`, ... |
 
-Multiple CSV files (one per biological replicate) are passed to `exScan_fluor.py` for combined analysis.
-
-### Emission Scan
-
-- Input: TIFF stacks where each slice = one emission wavelength
-- Each replicate folder contains a `Stacks/` subdirectory with `ch0` (intensity) files
-- Processed directly by `emscanplot.py`
+Multiple CSV files (one per biological replicate) are passed to `scan_fluor.py` for combined analysis.
 
 ### Metabolic Trajectory (Phasor Analysis)
 
@@ -192,7 +182,7 @@ Each row corresponds to a single ROI. Separate files represent distinct experime
 
 Open Fiji, drag in `Assemble_ExScan_ch0_Stack.ijm` and run. When prompted:
 - Select the folder containing raw `.tif` files
-- Enter the sample name exactly as it appears in the filenames (e.g. `avGFP-1`)
+- Enter the sample name exactly as it appears in the filenames (e.g. `av-post2`)
 
 This produces a single stack with slices labeled by wavelength, ready for ROI drawing.
 
@@ -205,29 +195,24 @@ With the assembled stack open, run `FijiROI_csvcreation.ijm`. When prompted:
 
 Outputs one CSV file per biological replicate.
 
-### Step 3 — Excitation scan analysis (Python)
+### Step 3 — Scan analysis (Python)
 
 ```bash
-python ExcitationScan/exScan_fluor.py
+python scan_fluor/scan_fluor.py
 ```
 
 The script will interactively prompt for:
+- Scan type (excitation or emission)
 - Fluorophore name
 - Number of biological replicates
-- File paths to each replicate CSV
+- File path to each replicate CSV
 - Output filename and DPI
 
 This script:
-- Normalizes intensity by SP8 laser power (instrument-specific calibration embedded)
+- Normalizes intensity by SP8 laser power (calibration values embedded — see Calibration note)
 - Combines biological replicates and propagates SEM
 - Applies log₁₀ transformation via the delta method
-- Generates and saves excitation scan plots
-
-### Emission Scan Analysis (Python)
-
-```bash
-python EmissionScan/emscanplot.py
-```
+- Generates and saves plots with ±SEM shaded error bands
 
 ### Metabolic Trajectory Analysis (Python)
 
@@ -235,13 +220,15 @@ python EmissionScan/emscanplot.py
 python metabolic_trajectory/figure6_phasor_metabolic_trajectory.py
 ```
 
+Generates phasor-based representations of metabolic state across conditions.
+
 ---
 
 ## ⚠️ Notes
 
 - Fluorescent protein cross-excitation can introduce signal into the NADH detection channel under two-photon excitation
 - Interpretation of lifetime and intensity measurements should account for spectral overlap
-- Laser power normalization is specific to the SP8 system used in this study; users on other instruments should replace the calibration values in `exScan_fluor.py` and `emscanplot.py`
+- **Calibration:** Laser power normalization values in `scan_fluor.py` are specific to the SP8 system used in this study (10% laser power, measured 2024-08-07). If using a different instrument or acquisition date, replace the `LASER_POWERS` dictionary in `scan_fluor.py` with your own calibration measurements
 
 ---
 
